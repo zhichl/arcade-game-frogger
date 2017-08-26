@@ -1,40 +1,89 @@
-// Enemies our player must avoid
-var Enemy = function() {
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
+var entityInfo = {
+    enemyCount: 3,
+    enemyImgURL: 'images/enemy-bug.png',
 
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
-    this.sprite = 'images/enemy-bug.png';
-};
+    playerInitX: 200,
+    playerInitY: 400,
+    playerImgURL: 'images/char-boy.png',
 
-// Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
-Enemy.prototype.update = function(dt) {
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
-};
+    colWidth: 101,
+    rowHeight: 83
 
-// Draw the enemy on the screen, required method for game
-Enemy.prototype.render = function() {
-    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-};
+}
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
+// This class has an update(), render()
+class Enemy {
+    constructor(initX, initY, speed) {
+        this.sprite = entityInfo.enemyImgURL;
+        this.x = initX;
+        this.y = initY;
+        this.speed = speed;
+    }
+    update(dt) {}
+    render() {
+        ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+    }
+}
+
+
+class Player {
+    constructor(initX, initY) {
+        this.character = entityInfo.playerImgURL;
+        this.x = initX;
+        this.y = initY;
+    }
+    update(dt) {}
+    render() {
+        ctx.drawImage(Resources.get(this.character), this.x, this.y);
+    }
+    handleInput(direction) {}
+}
+
 
 
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
 
+var initPlayer = function () {
+    var x = entityInfo.playerInitX,
+        y = entityInfo.playerInitY,
+        player = new Player(x, y);
+    return player;
+};
+
+var initEnemies = function (enemyCount) {
+    var count,
+        enemies = [],
+        colW = entityInfo.colWidth,
+        rowH = entityInfo.rowHeight,
+        enemyImg = Resources[entityInfo.enemyImgURL],
+        // colOffset = -enemyImg.width,
+        // rowOffset = rowH / 2.0 - enemyImg.height / 2.0;
+        colOffset = -0,
+        rowOffset = -25;
+
+    for (count = 0; count < enemyCount; count++) {
+        var col = 0,
+            row = count % 3 + 1,
+            speed = getRndInteger(5, 15),
+            enemy = new Enemy(colW * col + colOffset, rowH * row + rowOffset, speed);
+        enemies.push(enemy);
+    };
+
+    // var enemy = new Enemy(0, 0, 0);
+    // enemies.push(enemy);
+    return enemies;
+};
+
+var player = initPlayer(),
+    allEnemies = initEnemies(entityInfo.enemyCount);
+
 
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
-document.addEventListener('keyup', function(e) {
+document.addEventListener('keyup', function (e) {
     var allowedKeys = {
         37: 'left',
         38: 'up',
@@ -44,3 +93,9 @@ document.addEventListener('keyup', function(e) {
 
     player.handleInput(allowedKeys[e.keyCode]);
 });
+
+
+// Helper functions
+function getRndInteger(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+};
