@@ -30,6 +30,13 @@ class Enemy {
     render() {
         ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
     }
+    move() {
+        if (this.x !== entityInfo.canvasWidth) {
+            this.x += this.speed;
+        } else {
+            this.x = this.initX;
+        }
+    }
 }
 
 // Player class
