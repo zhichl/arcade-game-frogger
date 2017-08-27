@@ -39,6 +39,8 @@ class Enemy {
 
         // select a row (y-coordinate in grid) randomly in range [1, 4)
         this.gridY = getRndInteger(1, 4);
+        // select current col (x-coordinate in grid) to -1 since it's out of the canvas when initialized
+        this.gridX = -1;
 
         // initial position
         this.x = entityInfo.enemyInitX();
@@ -64,6 +66,7 @@ class Enemy {
     move() {
         if (this.x < entityInfo.canvasWidth) {
             this.x += this.speed;
+            this.gridX = Math.floor(this.y / entityInfo.colWidth);
         } else {
             this.reset();
         }
@@ -72,6 +75,7 @@ class Enemy {
     // reset entity properties
     reset() {
         this.gridY = getRndInteger(1, 4);
+        this.gridX = -1;
         this.x = entityInfo.enemyInitX();
         this.y = entityInfo.rowHeight * this.gridY + (entityInfo.rowHeight - entityInfo.enemyHeight / 2);
         this.speed = getRndInteger(entityInfo.enemySpeedMin, entityInfo.enemySpeedMax);
@@ -81,9 +85,14 @@ class Enemy {
     checkCollision() {
         var ex = this.x, eW = entityInfo.enemyWidth, 
             px = player.x, pW = entityInfo.playerWidth,
-            sameRow = this.gridY === player.gridY;
+            sameRow = this.gridY === player.gridY,
+            inRightCol = this.gridX === (player.gridX + 1);
 
-        return sameRow && px - eW <= ex && ex <= px + pW;
+        // Return true if:
+        //  1. enemy is not in the column right of the player
+        //  2. they're in the same row 
+        //  3. they're overlapping by part or all
+        return !inRightCol && sameRow && (px - eW <= ex && ex <= px + pW);
     }
 }
 
