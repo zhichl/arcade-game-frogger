@@ -14,13 +14,13 @@ var entityInfo = {
     enemySpeedMin: 3,
     enemySpeedMax: 9,
 
-    enemyInitX: function() {
-        return -(this.enemyWidth);
-    },
-
     playerImgURL: 'images/char-boy.png',
     playerWidth: 68,
     playerHeight: 77,
+
+    enemyInitX: function() {
+        return -(this.enemyWidth);
+    },
 
     playerInitX: function() {
         return this.canvasWidth / 2.0 - this.playerWidth / 2.0;
@@ -30,7 +30,6 @@ var entityInfo = {
         return this.rowNum * this.rowHeight - this.playerHeight / 2.5;
     }
 };
-var log = console.log.bind(console);
 
 // Enemy class
 // methods: update(int), render(), move(), reset(), checkCollision()
@@ -41,6 +40,7 @@ class Enemy {
         // select a row (y-coordinate in grid) randomly in range [1, 4)
         this.gridY = getRndInteger(1, 4);
 
+        // initial position
         this.x = entityInfo.enemyInitX();
         this.y = entityInfo.rowHeight * this.gridY + (entityInfo.rowHeight - entityInfo.enemyHeight / 2);
 
@@ -48,6 +48,7 @@ class Enemy {
         this.speed = getRndInteger(entityInfo.enemySpeedMin, entityInfo.enemySpeedMax);
     }
     update(dt) {
+        // if collided, inform player
         var collided = this.checkCollision();
         if (collided) {
             player.collided = true;
@@ -59,6 +60,7 @@ class Enemy {
         ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
     }
 
+    // enemy moving function
     move() {
         if (this.x < entityInfo.canvasWidth) {
             this.x += this.speed;
@@ -75,6 +77,7 @@ class Enemy {
         this.speed = getRndInteger(entityInfo.enemySpeedMin, entityInfo.enemySpeedMax);
     }
 
+    // check collision with player
     checkCollision() {
         var ex = this.x, eW = entityInfo.enemyWidth, 
             px = player.x, pW = entityInfo.playerWidth,
@@ -96,9 +99,11 @@ class Player {
         this.gridX = Math.floor(entityInfo.colNum / 2);
         this.gridY = entityInfo.rowNum - 1;
 
+        // moving speed
         this.speedX = entityInfo.colWidth;
         this.speedY = entityInfo.rowHeight;
 
+        // if collision happens
         this.collided = false;
     }
 
@@ -143,6 +148,7 @@ class Player {
         this.win = false;
     }
 
+    // check if the player reaches the river
     checkWin() {
         return this.gridY === 0;
     }
@@ -205,6 +211,7 @@ class Player {
 var player = initPlayer(),
     allEnemies = initEnemies(entityInfo.enemyNum);
 
+// Function initializing player
 function initPlayer() {
     var x = entityInfo.playerInitX(),
         y = entityInfo.playerInitY(),
@@ -212,6 +219,7 @@ function initPlayer() {
     return player;
 }
 
+// Function initializing enemies
 function initEnemies(enemyNum) {
     var count,
         enemies = [];
@@ -237,7 +245,7 @@ document.addEventListener('keyup', function (e) {
         39: 'right',
         40: 'down',
 
-        // A / W / D / S
+        // A / W / D / S key maps
         65: 'left',
         87: 'up',
         68: 'right',
@@ -250,8 +258,4 @@ document.addEventListener('keyup', function (e) {
 // Helper functions
 function getRndInteger(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
-}
-
-function getDistance(x1, x2, y1, y2) {
-    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
 }
