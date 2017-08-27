@@ -8,7 +8,7 @@ To play the game, click this link: [Arcade Game - Frogger](https://zhichl.github
 
 ### Game Instructions
 
-Press Arrow Keys when game starts, or see the following key mappings:
+Press Arrow Keys <kbd>←</kbd> <kbd>↑</kbd> <kbd>➝</kbd> <kbd>↓</kbd> to move the player when game starts, or see the following key mappings:
 
 |     Key      | Direction |
 | :----------: | :-------: |
