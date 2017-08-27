@@ -1,35 +1,51 @@
 // General info for entity use
 var entityInfo = {
-    enemyCount: 5,
-    enemyImgURL: 'images/enemy-bug.png',
-    enemySpeedMin: 5,
-    enemySpeedMax: 10,
-
-    playerInitX: 200,
-    playerInitY: 405,
-    playerImgURL: 'images/char-boy.png',
-
+    canvasWidth: 505,
+    canvasHeight: 606,
+    colNum: 5,
+    rowNum: 6,
     colWidth: 101,
     rowHeight: 83,
 
-    colNum: 5,
-    rowNum: 6,
+    enemyNum: 3,
+    enemyImgURL: 'images/enemy-bug.png',
+    enemyWidth: 98,
+    enemyHeight: 67,
+    enemySpeedMin: 3,
+    enemySpeedMax: 9,
 
-    canvasWidth: 505,
-    canvasHeight: 606,
+    enemyInitX: function() {
+        return -(this.enemyWidth);
+    },
 
-    collisionThreshold: 50
-}
+    playerImgURL: 'images/char-boy.png',
+    playerWidth: 68,
+    playerHeight: 77,
+
+    playerInitX: function() {
+        return this.canvasWidth / 2.0 - this.playerWidth / 2.0;
+    },
+
+    playerInitY: function() {
+        return this.rowNum * this.rowHeight - this.playerHeight / 2.5;
+    }
+};
 var log = console.log.bind(console);
 
 // Enemy class
+// methods: update(int), render(), move(), reset(), checkCollision()
 class Enemy {
-    constructor(initX, initY, speed) {
+    constructor(row) {
         this.sprite = entityInfo.enemyImgURL;
-        this.initX = initX;
-        this.x = initX;
-        this.y = initY;
-        this.speed = speed;
+
+        // select a row (y-coordinate in grid) randomly in range [1, 4)
+        this.gridY = getRndInteger(1, 4);
+        
+        this.x = entityInfo.enemyInitX();
+        this.y = entityInfo.rowHeight * this.gridY + (entityInfo.rowHeight - entityInfo.enemyHeight / 2);
+
+        // decide a random speed in range [enemySpeedMin, enemySpeedMax)
+        this.speed = getRndInteger(entityInfo.enemySpeedMin, entityInfo.enemySpeedMax);
     }
     update(dt) {
         var collided = this.checkCollision();
@@ -51,24 +67,25 @@ class Enemy {
         }
     }
 
+    // reset entity properties
     reset() {
-        this.x = this.initX;
+        this.gridY = getRndInteger(1, 4);
+        this.x = entityInfo.enemyInitX();
+        this.y = entityInfo.rowHeight * this.gridY + (entityInfo.rowHeight - entityInfo.enemyHeight / 2);
         this.speed = getRndInteger(entityInfo.enemySpeedMin, entityInfo.enemySpeedMax);
     }
 
     checkCollision() {
-        var collided = false,
-            distance = getDistance(this.x, this.y, player.x, player.y);
+        var ex = this.x, eW = entityInfo.enemyWidth, 
+            px = player.x, pW = entityInfo.playerWidth,
+            sameRow = this.gridY === player.gridY;
 
-        if (distance < entityInfo.collisionThreshold) {
-            collided = true;
-        }
-        
-        return collided;
+        return sameRow && px - eW <= ex && ex <= px + pW;
     }
 }
 
 // Player class
+// methods: update(int), render(), reset(), checkWin(), handleInput(String), moveLeft / Right / Up / Down ()
 class Player {
     constructor(initX, initY) {
         this.character = entityInfo.playerImgURL;
@@ -84,22 +101,50 @@ class Player {
 
         this.collided = false;
     }
+
     update(dt) {
         if (this.collided) {
-            this.reset();
+            // trigger resetGame after 100ms the collision happened to make an enemy-player "touch" effect
+            setTimeout(function() {
+                resetGame(); 
+            }, 100);
+        } else {
+            // if wins, hold winning state for 1s
+            var win = this.checkWin();
+            if (win) {
+                this.win = true;
+                setTimeout(function() {
+                    resetGame(); 
+                }, 1000);
+            }
         }
-        this.collided = false;
     }
 
     render() {
+        // render player character
         ctx.drawImage(Resources.get(this.character), this.x, this.y);
+
+        // render winning message
+        if (this.win === true) {
+            ctx.font = '35px sans-serif';
+            // ctx.fillStyle = "rgb(40, 104, 236)";
+            ctx.fillStyle = "white";
+            ctx.fillText("You Win!", 185, 575);
+        }
     }
 
+    // reset entity properties
     reset() {
-        this.x = entityInfo.playerInitX;
-        this.y = entityInfo.playerInitY;
+        this.x = entityInfo.playerInitX();
+        this.y = entityInfo.playerInitY();
         this.gridX = Math.floor(entityInfo.colNum / 2);
         this.gridY = entityInfo.rowNum - 1;
+        this.collided = false;
+        this.win = false;
+    }
+
+    checkWin() {
+        return this.gridY === 0;
     }
 
     handleInput(direction) {
@@ -114,7 +159,7 @@ class Player {
                     this.moveRight();
                 }
 
-            // vertical direction
+                // vertical direction
             } else {
                 if (direction === "up") {
                     this.moveUp();
@@ -154,40 +199,39 @@ class Player {
     }
 }
 
-// initialize player and enemies
+// Initialize player and enemies
 var player = initPlayer(),
-allEnemies = initEnemies(entityInfo.enemyCount);
+    allEnemies = initEnemies(entityInfo.enemyNum);
 
-function initPlayer () {
-    var x = entityInfo.playerInitX,
-        y = entityInfo.playerInitY,
+function initPlayer() {
+    var x = entityInfo.playerInitX(),
+        y = entityInfo.playerInitY(),
         player = new Player(x, y);
     return player;
-};
+}
 
-function initEnemies (enemyCount) {
+function initEnemies(enemyNum) {
     var count,
-        enemies = [],
-        colW = entityInfo.colWidth,
-        rowH = entityInfo.rowHeight,
-        enemyImg = Resources[entityInfo.enemyImgURL],
-        // colOffset = -enemyImg.width,
-        // rowOffset = rowH / 2.0 - enemyImg.height / 2.0;
-        colOffset = -101,
-        rowOffset = -25;
-
-    for (count = 0; count < enemyCount; count++) {
-        var col = 0,
-            row = count % 3 + 1,
-            speed = getRndInteger(entityInfo.enemySpeedMin, entityInfo.enemySpeedMax),
-            enemy = new Enemy(colW * col + colOffset, rowH * row + rowOffset, speed);
-        enemies.push(enemy);
-    };
-
+        enemies = [];
+        // colW = entityInfo.colWidth,
+        // rowH = entityInfo.rowHeight,
+        // xOffset = -entityInfo.enemyWidth,
+        // yOffset = rowH - entityInfo.enemyHeight / 2;
+    
+    for (count = 0; count < enemyNum; count++) {
+        enemies.push(new Enemy());
+    }
     return enemies;
-};
+}
+
+// Reset game
+function resetGame() {
+    // TODO: more advanced functions and resets.
+    player.reset();
+}
 
 // Key presses listener
+// two ways: arrow keys and A/W/D/S binding
 document.addEventListener('keyup', function (e) {
     var allowedKeys = {
         // arrow keys
@@ -209,7 +253,7 @@ document.addEventListener('keyup', function (e) {
 // Helper functions
 function getRndInteger(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
-};
+}
 
 function getDistance(x1, x2, y1, y2) {
     return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
