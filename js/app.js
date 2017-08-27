@@ -40,7 +40,7 @@ class Enemy {
 
         // select a row (y-coordinate in grid) randomly in range [1, 4)
         this.gridY = getRndInteger(1, 4);
-        
+
         this.x = entityInfo.enemyInitX();
         this.y = entityInfo.rowHeight * this.gridY + (entityInfo.rowHeight - entityInfo.enemyHeight / 2);
 
@@ -104,7 +104,7 @@ class Player {
 
     update(dt) {
         if (this.collided) {
-            // trigger resetGame after 100ms the collision happened to make an enemy-player "touch" effect
+            // trigger resetGame() after 100ms the collision happened to make an enemy-player "touch" effect
             setTimeout(function() {
                 resetGame(); 
             }, 100);
@@ -147,6 +147,7 @@ class Player {
         return this.gridY === 0;
     }
 
+    // decide what to do with the key input
     handleInput(direction) {
         // check direction is not undefined
         if (direction) {
@@ -170,6 +171,7 @@ class Player {
         }
     }
 
+// moving methods
     moveLeft() {
         if (this.gridX !== 0) {
             this.x -= this.speedX;
@@ -213,11 +215,6 @@ function initPlayer() {
 function initEnemies(enemyNum) {
     var count,
         enemies = [];
-        // colW = entityInfo.colWidth,
-        // rowH = entityInfo.rowHeight,
-        // xOffset = -entityInfo.enemyWidth,
-        // yOffset = rowH - entityInfo.enemyHeight / 2;
-    
     for (count = 0; count < enemyNum; count++) {
         enemies.push(new Enemy());
     }
